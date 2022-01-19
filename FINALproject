@@ -1,0 +1,116 @@
+.data
+asciiZero: .byte '0'
+exp: .space 30
+
+.text
+main:
+	la $t7,exp #load the exp address into the $t7
+	lui $t1, 0Xffff 
+	#load 0 in $s0 4 in $s1
+	li $s1, 0
+	li $s2, 4
+
+Loop:
+	lw $t6, 0($t1)
+	andi $t6, $t6, 0X0001
+	
+	
+	beq $t6, $zero, Loop
+	lw $v0, 4($t1)
+	sb $v0, 0($t7)
+	addi $t7, $t7, 1
+	addi $s1, $s1, 1
+	
+	li $v0, 1
+	move $a0, $s1
+	syscall
+	
+	bge $s1, $s2, sum
+	j Loop
+	
+sum:
+	
+	la $t7, exp #load the address of the exp to $t3
+	lb $a0,($t7)
+	jal char2num #jump and connect to the loop char2num
+	
+	move $t8, $v0
+	addi $t7, $t7, 2
+	
+	lb $a0,($t7)
+	
+	jal char2num
+	
+	move $t5, $v0
+	
+	#add two digits
+	add $t8, $t8, $t5
+	li $t5,9
+	#two digits, then goto doubleDigits
+	bgt $t8,$t5,doubleDigits
+	#one digit then goto singleDigit
+	j singleDigit
+	
+
+doubleDigits:
+	# jump and link to the loop char2num
+	li $a0,1
+	jal num2char
+	move $t5, $v0
+	addi $t7, $t7, 2
+	sb $t5,($t7)
+	subi $t8,$t8,10
+	subi $t7, $t7, 1
+	
+singleDigit:
+	move $a0, $t8
+	jal num2char
+	addi $t7, $t7, 2
+	sb $v0,($t7)
+	lui $t0, 0xffff
+	la $t7, exp
+	lb $t6,($t7)
+	
+Loop2:
+	
+	beqz $t6, exit
+	sb $t6,12($t0)
+	
+print:
+	lw $t1, 8($t0)
+	andi $t1, $t1, 0x0001
+	
+	beq $t1, $zero, print
+	addi $t7, $t7, 1
+	lb $t6,($t7)
+	
+	j Loop2
+	
+#converts ascii char to num
+char2num:
+lb $t0, asciiZero
+subu $v0, $a0, $t0
+jr $ra
+
+#converts the num to ascii char
+num2char:
+lb $t0, asciiZero
+addu $v0, $a0, $t0
+jr $ra
+
+exit:
+	li $v0,10
+	syscall
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
